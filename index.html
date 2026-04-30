@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Apple Slasher | Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-deep: #0a0c15;
+            --bg-surface: #11161f;
+            --glass-card: rgba(30, 41, 59, 0.75);
+            --premium-gold-start: #fbbf24;
+            --premium-gold-end: #f59e0b;
+            --neon-green: #4ade80;
+            --neon-red: #ff4d4d;
+            --text-glow: 0 0 8px rgba(251, 191, 36, 0.6);
+            --border-glow: 0 0 12px rgba(251, 191, 36, 0.3);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at 10% 20%, #121826, #02040c);
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle at 20% 40%, rgba(251, 191, 36, 0.08) 2px, transparent 2px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #statusBanner {
+            background: linear-gradient(95deg, #dc2626, #b91c1c);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            max-width: 500px;
+            z-index: 2000;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+            border-bottom: 1px solid #ff8a8a;
+            display: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 18px 16px 90px 16px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* USERNAME SCREEN - Permanent lock */
+        #usernameScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 20%, #0f172a, #020617);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+        .username-card {
+            background: rgba(18, 25, 45, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 3rem;
+            padding: 2rem 1.5rem;
+            width: 90%;
+            max-width: 380px;
+            border: 2px solid rgba(251, 191, 36, 0.6);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        .username-card h2 {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        .username-card input {
+            background: #0a0f1e;
+            border: 2px solid #334155;
+            border-radius: 60px;
+            padding: 16px 20px;
+            font-size: 1.2rem;
+            width: 100%;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            transition: 0.2s;
+        }
+        .username-card input:focus {
+            border-color: #fbbf24;
+            outline: none;
+            box-shadow: 0 0 12px #fbbf24;
+        }
+        .username-guide {
+            background: #1e293b80;
+            border-radius: 2rem;
+            padding: 12px;
+            margin: 18px 0;
+            font-size: 13px;
+            text-align: left;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            border-left: 5px solid #fbbf24;
+        }
+        .btn-create {
+            background: linear-gradient(105deg, #fbbf24, #f59e0b);
+            width: 100%;
+            padding: 14px;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            border: none;
+            color: #0c0a1a;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(245,158,11,0.4);
+            transition: 0.1s;
+        }
+        .btn-create:active { transform: scale(0.97); }
+        .error-msg {
+            color: #ff8a8a;
+            font-size: 12px;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+        .admin-reset-msg {
+            background: #7c2d12;
+            color: #fed7aa;
+            padding: 8px;
+            border-radius: 30px;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .card {
+            background: rgba(18, 25, 45, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-premium {
+            background: linear-gradient(105deg, #fbbf24, #f59e0b);
+            border: none;
+            padding: 16px 20px;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: #0c0a1a;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .btn-premium:active { transform: scale(0.97); }
+        .btn-premium:disabled {
+            background: #2d3a4e;
+            box-shadow: none;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            border-radius: 1.5rem;
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            flex: 1;
+            margin: 0 6px;
+        }
+        .stat-box div { font-weight: 800; font-size: 1.4rem; color: #fbbf24; text-shadow: 0 0 5px #ffb347; }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 460px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 6px;
+            border-radius: 60px;
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            z-index: 100;
+        }
+        .nav-item {
+            color: #7e8ba3;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex: 1;
+            cursor: pointer;
+            padding: 6px 0;
+            border-radius: 40px;
+        }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
+        .nav-item.active { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+
+        .leader-item {
+            background: rgba(15, 23, 42, 0.6);
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid #334155;
+        }
+        .m-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .m-table th { color: #fbbf24; font-size: 12px; padding-bottom: 6px; }
+        .m-table td { padding: 12px 4px; background: #0f172a80; border-radius: 18px; }
+
+        .gift-card {
+            background: linear-gradient(135deg, #065f46, #022c22);
+            border-radius: 2rem;
+            margin: 14px 0;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #fbbf24;
+            cursor: pointer;
+        }
+        .code-block {
+            font-size: 22px;
+            font-family: monospace;
+            letter-spacing: 2px;
+            font-weight: bold;
+            background: #00000066;
+            border-radius: 18px;
+            padding: 10px 12px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .copy-toast {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #22c55e;
+            color: #020617;
+            font-weight: bold;
+            padding: 8px 20px;
+            border-radius: 60px;
+            z-index: 3000;
+            animation: fadeToast 1.5s ease forwards;
+            pointer-events: none;
+        }
+        @keyframes fadeToast {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-15px); }
+        }
+        .hidden { display: none; }
+        
+        .game-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0f172a, #020617);
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(16px);
+            padding: 20px;
+        }
+        .game-fullscreen .game-card {
+            background: rgba(0,0,0,0.7);
+            border-radius: 3rem;
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem 1.5rem;
+            border: 2px solid #fbbf24;
+            text-align: center;
+        }
+        .apple-big { font-size: 140px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); margin: 15px 0; }
+        .close-game-btn { background: #dc2626; border: none; padding: 12px; border-radius: 60px; color: white; font-weight: bold; margin-top: 20px; width: 100%; cursor: pointer; }
+
+        /* ADMIN PANEL STYLES */
+        .admin-panel {
+            margin-bottom: 20px;
+            border-top: 2px solid #fbbf24;
+            padding-top: 16px;
+        }
+        .admin-card {
+            background: #1e1b2ecc;
+            border-radius: 2rem;
+            padding: 1rem;
+            margin-bottom: 20px;
+        }
+        .admin-input-group {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .admin-input-group input {
+            flex: 1;
+            background: #0a0f1e;
+            border: 1px solid #fbbf24;
+            border-radius: 60px;
+            padding: 12px;
+            color: white;
+        }
+        .btn-danger {
+            background: #b91c1c;
+            box-shadow: none;
+            color: white;
+        }
+        .user-list-item {
+            background: #0f172a;
+            border-radius: 40px;
+            padding: 8px 12px;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="statusBanner"><i class="fas fa-skull-crosswalk"></i> SESSION LOCKED – COME BACK DURING OPEN HOURS </div>    
+
+<!-- USERNAME SCREEN -->
+<div id="usernameScreen">
+    <div class="username-card">
+        <i class="fas fa-user-astronaut" style="font-size: 48px; color: #fbbf24;"></i>
+        <h2>APPLE SLASHER</h2>
+        <p style="font-size: 13px; margin-bottom: 6px;">Create your username for Apple Slasher game</p>
+        <div id="suggestionBox" style="display: none;"></div>
+        <div class="username-guide">
+            <i class="fas fa-lock"></i>
+            <div><strong>Username Type : @USER_1234</strong><br>• Start with <strong>@</strong> symbol<br>• Example: <code>@john_123</code><br>• Min 5, Max 20 characters</div>
+        </div>
+        <input type="text" id="newUsernameInput" placeholder="@your_unique_id" autocomplete="off" maxlength="20">
+        <div id="usernameError" class="error-msg"></div>
+        <button id="createUsernameBtn" class="btn-create"><i class="fas fa-feather-alt"></i> CREATE </button>
+        <div id="adminResetNotification" class="admin-reset-msg" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="container">
+    <section id="sec-click" class="tab-content">
+        <div class="card">
+            <p style="font-size: 10px; text-align: right;">Session: <span id="openTimeText">--</span> - <span id="closeTimeText">--</span></p>
+            <h3 style="color:#FBBF24; text-align: center;"><i class="fas fa-cut"></i> APPLE SLASHER</h3>
+            <div style="display: flex; margin: 20px 0 10px;">
+                <div class="stat-box"><small>⚔️ USERNAME</small><div id="myUID" style="font-size:13px;">--</div></div>
+                <div class="stat-box"><small>🏆 HIGH SCORE</small><div id="myBest">0</div></div>
+            </div>
+            <button id="startFullGameBtn" class="btn-premium"><i class="fas fa-play"></i> START GAME</button>
+            
+            <!-- ADMIN PANEL (hidden by default, appears for admin) -->
+            <div id="adminPanelSection" class="admin-panel hidden">
+                <div class="admin-card">
+                    <h4 style="color:#fbbf24;"><i class="fas fa-shield-alt"></i> ADMIN CONTROL</h4>
+                    <p style="font-size: 12px;">Remove any user → Device can recreate username</p>
+                    <div class="admin-input-group">
+                        <input type="text" id="adminRemoveUsername" placeholder="Enter username to remove (e.g., @john_123)">
+                        <button id="adminRemoveUserBtn" class="btn-premium btn-danger" style="padding: 12px 16px;">REMOVE USER</button>
+                    </div>
+                    <div id="adminUserList" style="max-height: 200px; overflow-y: auto; margin-top: 12px;"></div>
+                    <button id="adminRefreshListBtn" class="btn-premium" style="background:#334155; margin-top: 8px;"><i class="fas fa-sync-alt"></i> Refresh Users</button>
+                </div>
+            </div>
+            <div style="margin-top: 15px; text-align: center; font-size: 11px;">🍎 Slash apples beat highscore</div>
+        </div>
+    </section>
+
+    <section id="sec-milestone" class="tab-content hidden">
+        <div class="card">
+            <h3 style="color: #FBBF24;"><i class="fas fa-chart-line"></i> TARGET & PRIZE</h3>
+            <div id="currentStatus" class="active-milestone" style="margin-bottom: 20px;">🏅 Loading milestones...</div>
+            <table class="m-table"><thead><tr><th>👥 TARGET USERS</th><th>🏅 WINNERS</th><th>💰 REWARD (₹)</th></tr></thead><tbody id="milestoneBody"></tbody></table>
+        </div>
+    </section>
+
+    <section id="sec-leader" class="tab-content hidden">
+        <div class="card">
+            <h3 style="color:#FBBF24; text-align: center;">🌍 GLOBAL RANKINGS</h3>
+            <div style="background:#111b29; width: auto; margin: 10px auto; padding: 6px 16px; border-radius: 50px; text-align:center;">Total Users: <span id="totalUserCount" style="font-weight:800;">0</span></div>
+            <div id="leaderList" style="max-height: 430px; overflow-y: auto;"></div>
+        </div>
+    </section>
+
+    <section id="sec-gift" class="tab-content hidden">
+        <div class="card">
+            <h3 style="color:#4ADE80;"><i class="fas fa-gift"></i> MY REWARDS</h3>
+            <div id="giftContainer"></div>
+        </div>
+    </section>
+</div>
+
+<nav class="bottom-nav" id="bottomNav">
+    <div class="nav-item active" onclick="window.showTab?.('sec-click', this)"><i class="fas fa-gamepad"></i>Play</div>
+    <div class="nav-item" onclick="window.showTab?.('sec-milestone', this)"><i class="fas fa-bullseye"></i>Roadmap</div>
+    <div class="nav-item" onclick="window.showTab?.('sec-leader', this)"><i class="fas fa-trophy"></i>Ranks</div>
+    <div class="nav-item" onclick="window.showTab?.('sec-gift', this)"><i class="fas fa-wallet"></i>Gifts</div>
+</nav>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, get, set, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDnM9ry5JreqjRXqQVUSiaBzudXuaAF-QI",
+        databaseURL: "https://send-message-b178e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    
+    let CURRENT_USERNAME = null;
+    let ADMIN_SETTINGS = { gameDuration: 15, showLimit: 200, winAmount: 10, milestones: {100:{wins:10,price:50},250:{wins:20,price:150},500:{wins:40,price:300}}, openTime: "00:00", closeTime: "23:59" };
+    let ADMIN_CREDENTIAL = "admin@apple123"; // simple admin key (user can type to activate)
+    
+    function getDeviceFingerprint() {
+        let fp = localStorage.getItem("device_fingerprint");
+        if (!fp) { fp = "DEV_" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36); localStorage.setItem("device_fingerprint", fp); }
+        return fp;
+    }
+    const deviceId = getDeviceFingerprint();
+    
+    async function fetchDeviceBoundUsername() {
+        const bindingRef = ref(db, `deviceBindings/${deviceId}`);
+        const snap = await get(bindingRef);
+        return snap.exists() ? snap.val().username : null;
+    }
+    
+    async function validateAndActivateUsername(username) {
+        const lowerKey = username.toLowerCase();
+        const userSnap = await get(ref(db, `usernames/${lowerKey}`));
+        if (userSnap.exists() && userSnap.val().deviceId === deviceId) {
+            localStorage.setItem("apple_permanent_username", username);
+            CURRENT_USERNAME = username;
+            return true;
+        }
+        return false;
+    }
+    
+    async function checkExistingUsername() {
+        const storedUsername = localStorage.getItem("apple_permanent_username");
+        if (storedUsername) {
+            const snap = await get(ref(db, `usernames/${storedUsername.toLowerCase()}`));
+            if (snap.exists() && snap.val().deviceId === deviceId) {
+                CURRENT_USERNAME = storedUsername;
+                document.getElementById('usernameScreen').style.display = 'none';
+                initAppAfterAuth(CURRENT_USERNAME);
+                return true;
+            } else localStorage.removeItem("apple_permanent_username");
+        }
+        return false;
+    }
+    
+    function isValidUsernameFormat(input) {
+        const trimmed = input.trim();
+        if (!trimmed.startsWith('@')) return false;
+        if (trimmed.length < 5 || trimmed.length > 20) return false;
+        return /^@[a-zA-Z0-9_]+$/.test(trimmed);
+    }
+    
+    function setUsernameError(msg) {
+        const errDiv = document.getElementById('usernameError');
+        errDiv.innerText = msg;
+        setTimeout(() => { if(errDiv) errDiv.innerText = ''; }, 3500);
+    }
+    
+    // ADMIN: REMOVE USER COMPLETELY (allow recreation)
+    async function adminRemoveUser(usernameToRemove) {
+        if (!usernameToRemove || usernameToRemove.trim() === "") return alert("Enter username");
+        const cleanName = usernameToRemove.trim();
+        const lowerKey = cleanName.toLowerCase();
+        // Check if exists
+        const userRef = ref(db, `usernames/${lowerKey}`);
+        const userSnap = await get(userRef);
+        if (!userSnap.exists()) return alert(`User ${cleanName} not found`);
+        const deviceIdBound = userSnap.val().deviceId;
+        // Remove from usernames
+        await remove(userRef);
+        // Remove leaderboard entry
+        await remove(ref(db, `leaderboard/${lowerKey}`));
+        // Remove device binding
+        if (deviceIdBound) await remove(ref(db, `deviceBindings/${deviceIdBound}`));
+        // Remove gifts data if any
+        await remove(ref(db, `gifts/${cleanName}`));
+        // Remove logs
+        await remove(ref(db, `userLogs/${cleanName}`));
+        alert(`✅ User ${cleanName} removed successfully. Their device can now create a new username.`);
+        // Refresh admin list
+        await loadAllUsersForAdmin();
+    }
+    
+    async function loadAllUsersForAdmin() {
+        const usernamesSnap = await get(ref(db, 'usernames'));
+        if (!usernamesSnap.exists()) { document.getElementById('adminUserList').innerHTML = "<div>No users</div>"; return; }
+        const users = Object.values(usernamesSnap.val());
+        const listHtml = users.map(u => `<div class="user-list-item"><span><i class="fas fa-user"></i> ${u.username}</span><button class="admin-delete-mini" data-name="${u.username}" style="background:#b91c1c; border:none; padding:4px 12px; border-radius:60px; color:white;">Remove</button></div>`).join('');
+        document.getElementById('adminUserList').innerHTML = listHtml;
+        document.querySelectorAll('.admin-delete-mini').forEach(btn => {
+            btn.addEventListener('click', () => adminRemoveUser(btn.getAttribute('data-name')));
+        });
+    }
+    
+    // Check if current user is admin (by clicking secret with pass)
+    function promptAdminLogin() {
+        const pwd = prompt("🔐 ADMIN ACCESS: Enter admin key:");
+        if (pwd === "admin@apple123") {
+            document.getElementById('adminPanelSection').classList.remove('hidden');
+            loadAllUsersForAdmin();
+            alert("Admin mode activated. You can now remove users.");
+        } else alert("Invalid key");
+    }
+    
+    async function createPermanentUsername(rawUsername) {
+        const finalUsername = rawUsername.trim();
+        if (!isValidUsernameFormat(finalUsername)) {
+            setUsernameError("❌ Invalid! Use @ + letters/numbers/_ . Min 5 chars.");
+            return false;
+        }
+        const lowerKey = finalUsername.toLowerCase();
+        const usernameRef = ref(db, `usernames/${lowerKey}`);
+        const snap = await get(usernameRef);
+        if (snap.exists()) { 
+            // If exists but our device id mismatch? might be removed by admin? 
+            // But if exists and device is different => occupied
+            if(snap.val().deviceId !== deviceId) { setUsernameError("🚫 Username already taken!"); return false; }
+            else { return await validateAndActivateUsername(finalUsername); } // re-activate
+        }
+        const deviceBindingRef = ref(db, `deviceBindings/${deviceId}`);
+        const deviceSnap = await get(deviceBindingRef);
+        if (deviceSnap.exists() && deviceSnap.val().username !== finalUsername) {
+            setUsernameError("🔒 This device already has a permanent username. One device = one identity.");
+            return false;
+        }
+        await set(usernameRef, { username: finalUsername, deviceId: deviceId, createdAt: Date.now(), score: 0 });
+        await set(deviceBindingRef, { username: finalUsername, boundAt: Date.now() });
+        const existingScore = await get(ref(db, `leaderboard/${lowerKey}`));
+        if (!existingScore.exists()) await set(ref(db, `leaderboard/${lowerKey}`), { uid: finalUsername, score: 0 });
+        localStorage.setItem("apple_permanent_username", finalUsername);
+        CURRENT_USERNAME = finalUsername;
+        document.getElementById('usernameScreen').style.display = 'none';
+        initAppAfterAuth(CURRENT_USERNAME);
+        return true;
+    }
+    
+    // Fullscreen game (same as original)
+    async function openFullscreenGame(username) {
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        if (timeStr < ADMIN_SETTINGS.openTime || timeStr > ADMIN_SETTINGS.closeTime) {
+            alert("⛔ GAME SESSION CLOSED! Come back during open hours.");
+            return;
+        }
+        const scoreSnap = await get(ref(db, `leaderboard/${username.toLowerCase()}`));
+        let highScore = (scoreSnap.val() && scoreSnap.val().score) ? scoreSnap.val().score : 0;
+        const gameDiv = document.createElement('div');
+        gameDiv.className = 'game-fullscreen';
+        gameDiv.innerHTML = `
+            <div class="game-card">
+                <h2 style="color:#fbbf24;"><i class="fas fa-apple-alt"></i> APPLE SLASHER 🍎</h2>
+                <div style="display:flex; justify-content:space-between;">
+                    <div class="stat-box"><small>🏆 HIGH SCORE</small><div id="fullHighScore">${highScore}</div></div>
+                    <div class="stat-box"><small>🔥 CURRENT</small><div id="fullCurrentScore">0</div></div>
+                </div>
+                <div class="apple-big" id="fullApple">🍎</div>
+                <div id="fullTimer" style="font-size: 1.8rem; font-weight:800;">⏱️ ${ADMIN_SETTINGS.gameDuration}s</div>
+                <button id="fullSlashBtn" class="btn-premium"><i class="fas fa-hand-peace"></i> START </button>
+                <button id="exitFullGame" class="close-game-btn"><i class="fas fa-sign-out-alt"></i> EXIT </button>
+            </div>
+        `;
+        document.body.appendChild(gameDiv);
+        document.body.style.overflow = 'hidden';
+        let currentClicks = 0, isPlaying = false, timerInterval = null;
+        const appleDiv = gameDiv.querySelector('#fullApple');
+        const timerDiv = gameDiv.querySelector('#fullTimer');
+        const currentScoreDiv = gameDiv.querySelector('#fullCurrentScore');
+        const startButton = gameDiv.querySelector('#fullSlashBtn');
+        const exitBtn = gameDiv.querySelector('#exitFullGame');
+        const handleSlash = () => { if(isPlaying) { currentClicks++; currentScoreDiv.innerText = currentClicks; appleDiv.style.transform = 'scale(0.92)'; setTimeout(() => appleDiv.style.transform = '', 90); } };
+        appleDiv.addEventListener('click', handleSlash);
+        startButton.onclick = async () => {
+            if (isPlaying) return;
+            currentClicks = 0; currentScoreDiv.innerText = "0";
+            isPlaying = true;
+            let timeLeft = ADMIN_SETTINGS.gameDuration;
+            timerDiv.innerText = `⏱️ ${timeLeft}s`;
+            startButton.disabled = true;
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDiv.innerText = `⏱️ ${timeLeft}s`;
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval); isPlaying = false; startButton.disabled = false; startButton.innerHTML = '<i class="fas fa-play"></i> PLAY AGAIN';
+                    saveGameScore(username, currentClicks);
+                    get(ref(db, `leaderboard/${username.toLowerCase()}`)).then(snap => { if(snap.val()) document.getElementById('fullHighScore').innerText = snap.val().score; document.getElementById('myBest').innerText = snap.val()?.score || 0; });
+                }
+            }, 1000);
+        };
+        async function saveGameScore(uid, scoreVal) {
+            const scoreRef = ref(db, `leaderboard/${uid.toLowerCase()}`);
+            const snap = await get(scoreRef);
+            const best = (snap.val() && snap.val().score) ? snap.val().score : 0;
+            if (scoreVal > best) await set(scoreRef, { uid: uid, score: scoreVal });
+        }
+        exitBtn.onclick = () => { if(timerInterval) clearInterval(timerInterval); gameDiv.remove(); document.body.style.overflow = ''; };
+    }
+    
+    function updateMilestonesUI(userCount) {
+        const ms = ADMIN_SETTINGS.milestones || {};
+        const body = document.getElementById('milestoneBody');
+        if(!body) return;
+        body.innerHTML = '';
+        let currentUnlocked = 0;
+        Object.keys(ms).sort((a,b)=>Number(a)-Number(b)).forEach(target => {
+            const reached = userCount >= parseInt(target);
+            if(reached) currentUnlocked = ms[target].wins;
+            body.innerHTML += `<tr style="background:${reached ? '#0f2b1f30' : 'transparent'}"><td> ${target} users ${reached ? '✅' : ''} </td><td> ${ms[target].wins} winners </td><td> ₹${ms[target].price} </td></tr>`;
+        });
+        document.getElementById('currentStatus').innerHTML = `<i class="fas fa-crown"></i> ${currentUnlocked} Winners Unlocked <i class="fas fa-gem"></i>`;
+        return currentUnlocked;
+    }
+    
+    function attachGiftCopyHandler(container) {
+        container.querySelectorAll('.gift-card').forEach(card => {
+            card.addEventListener('click', async (e) => {
+                let codeSpan = card.querySelector('.copy-code-text');
+                if(codeSpan) { let code = codeSpan.getAttribute('data-code') || codeSpan.innerText.trim(); await navigator.clipboard.writeText(code); showCopyToast(`🎁 "${code}" copied!`); }
+            });
+        });
+    }
+    function showCopyToast(msg) { let toast = document.createElement('div'); toast.className = 'copy-toast'; toast.innerHTML = `<i class="fas fa-copy"></i> ${msg}`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 1500); }
+    
+    function initDataSync(currentUsername) {
+        onValue(ref(db, 'settings'), (snap) => { ADMIN_SETTINGS = {...ADMIN_SETTINGS, ...snap.val()}; document.getElementById('openTimeText').innerText = ADMIN_SETTINGS.openTime || "00:00"; document.getElementById('closeTimeText').innerText = ADMIN_SETTINGS.closeTime || "23:59"; checkAppStatus(); });
+        onValue(ref(db, 'leaderboard'), async (snap) => {
+            const data = snap.val() || {};
+            const users = Object.values(data).sort((a,b)=>b.score - a.score);
+            const totalUsers = users.length;
+            document.getElementById('totalUserCount').innerText = totalUsers;
+            const winnersLimit = updateMilestonesUI(totalUsers);
+            const listDiv = document.getElementById('leaderList');
+            if(listDiv) {
+                listDiv.innerHTML = '';
+                users.slice(0, ADMIN_SETTINGS.showLimit || 200).forEach((u, idx) => {
+                    const rank = idx+1; const isWinner = rank <= winnersLimit;
+                    const highlight = u.uid === currentUsername ? 'style="background: linear-gradient(95deg,#fbbf2420,#2a1e0a); border-left:4px solid #fbbf24;"' : '';
+                    listDiv.innerHTML += `<div class="leader-item" ${highlight}><div style="display:flex; justify-content:space-between;"><span><strong>#${rank}</strong> ${u.uid === currentUsername ? '🔥 YOU' : u.uid.slice(0,14)}</span><span><span class="prize-tag ${isWinner ? 'tag-win' : 'tag-lock'}">${isWinner ? '₹'+ADMIN_SETTINGS.winAmount : 'locked'}</span> <span style="color:#4ade80;">${u.score}</span></span></div></div>`;
+                    if(u.uid === currentUsername && document.getElementById('myBest')) document.getElementById('myBest').innerText = u.score;
+                });
+            }
+        });
+        onValue(ref(db, `gifts/${currentUsername}`), (snap) => {
+            const gifts = snap.val(); const container = document.getElementById('giftContainer');
+            if(!gifts || Object.keys(gifts).length === 0) { container.innerHTML = "<div style='padding:24px;text-align:center;background:#0a0f1e;border-radius:30px;'>No rewards yet.</div>"; return; }
+            container.innerHTML = Object.values(gifts).map(g => `<div class="gift-card" data-code="${g.code}"><i class="fas fa-ticket-alt"></i><div>🎁 REWARD ₹${g.amount}</div><div class="code-block"><span class="copy-code-text" data-code="${g.code}">${g.code}</span> <i class="fas fa-copy"></i></div></div>`).join('');
+            attachGiftCopyHandler(container);
+        });
+    }
+    
+    function checkAppStatus() {
+        const now = new Date(); const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        const closed = timeStr < ADMIN_SETTINGS.openTime || timeStr > ADMIN_SETTINGS.closeTime;
+        document.getElementById('statusBanner').style.display = closed ? 'flex' : 'none';
+        const startBtn = document.getElementById('startFullGameBtn');
+        if(startBtn && closed) { startBtn.disabled = true; startBtn.innerHTML = '<i class="fas fa-ban"></i> SESSION CLOSED'; }
+        else if(startBtn && !closed && startBtn.disabled) { startBtn.disabled = false; startBtn.innerHTML = '<i class="fas fa-play"></i> START GAME (FULLSCREEN)'; }
+    }
+    
+    function initAppAfterAuth(username) {
+        document.getElementById('myUID').innerText = username;
+        document.getElementById('startFullGameBtn').onclick = () => openFullscreenGame(username);
+        initDataSync(username);
+        setInterval(checkAppStatus, 3000);
+        checkAppStatus();
+        // Add admin trigger (long press on play header)
+        const playHeader = document.querySelector('#sec-click .card h3');
+        if(playHeader) playHeader.ondblclick = () => promptAdminLogin();
+    }
+    
+    window.showTab = (id, el) => {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(el) el.classList.add('active');
+    };
+    
+    (async function bootstrap() {
+        const hasUser = await checkExistingUsername();
+        if(!hasUser) {
+            const boundDeviceName = await fetchDeviceBoundUsername();
+            if(boundDeviceName) {
+                const suggestionBox = document.getElementById('suggestionBox');
+                suggestionBox.style.display = 'block';
+                suggestionBox.innerHTML = `<div class="suggestion-card" id="suggestionLoginBtn"><div class="suggestion-label"><i class="fas fa-mobile-alt"></i> 🔄 DEVICE DETECTED</div><div class="suggestion-name">${boundDeviceName}</div><div style="font-size:11px;">Click to login</div></div>`;
+                document.getElementById('suggestionLoginBtn').onclick = async () => { if(await validateAndActivateUsername(boundDeviceName)) { document.getElementById('usernameScreen').style.display = 'none'; initAppAfterAuth(CURRENT_USERNAME); } else setUsernameError("Recover failed"); };
+            }
+            document.getElementById('createUsernameBtn').onclick = async () => { const val = document.getElementById('newUsernameInput').value; if(val) await createPermanentUsername(val); else setUsernameError("Enter username"); };
+        }
+        window.adminRemoveUserGlobal = adminRemoveUser;
+        document.getElementById('adminRemoveUserBtn').addEventListener('click', () => { const name = document.getElementById('adminRemoveUsername').value; if(name) adminRemoveUser(name); else alert("Enter username"); });
+        document.getElementById('adminRefreshListBtn').addEventListener('click', loadAllUsersForAdmin);
+    })();
+</script>
+</body>
+              </html>
