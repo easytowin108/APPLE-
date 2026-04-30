@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Apple Slasher | Admin Panel</title>
+    <title>Apple Slasher </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -505,7 +505,7 @@
         const trimmed = input.trim();
         if (!trimmed.startsWith('@')) return false;
         if (trimmed.length < 5 || trimmed.length > 20) return false;
-        return /^@[a-zA-Z0-9_]+$/.test(trimmed);
+        return /^@[a-z0-9_]+$/.test(trimmed);
     }
     
     function setUsernameError(msg) {
